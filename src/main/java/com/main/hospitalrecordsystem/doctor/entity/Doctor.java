@@ -8,6 +8,7 @@ import com.main.hospitalrecordsystem.medicalrecord.entity.MedicalRecord;
 import jakarta.persistence.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Doctor {
@@ -18,7 +19,7 @@ public class Doctor {
 
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(
             name = "department_id",
             nullable = false
@@ -29,7 +30,7 @@ public class Doctor {
 
     @ElementCollection
     @Enumerated(EnumType.STRING)
-    private List<Days> availableDays;
+    private Set<Days> availableDays;
 
     @JsonIgnore
     @OneToMany(
@@ -77,11 +78,11 @@ public class Doctor {
         this.appointments = appointments;
     }
 
-    public List<Days> getAvailableDays() {
+    public Set<Days> getAvailableDays() {
         return availableDays;
     }
 
-    public void setAvailableDays(List<Days> availableDays) {
+    public void setAvailableDays(Set<Days> availableDays) {
         this.availableDays = availableDays;
     }
 

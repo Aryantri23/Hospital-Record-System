@@ -60,4 +60,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IncompleteObjectException.class)
+    public ResponseEntity<ResponseStructure<String>> handleIncompleteObject(IncompleteObjectException exception) {
+        return new ResponseEntity<>(new ResponseStructure<String>()
+                .setData("Failed")
+                .setMessage(exception.getMessage())
+                .setStatus(HttpStatus.BAD_REQUEST.value()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
 }
