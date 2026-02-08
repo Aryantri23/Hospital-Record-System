@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -117,6 +119,129 @@ public class AppointmentService {
 
         if (appointments.isEmpty()) {
             throw new NoRecordFoundException("No Appointment Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<Appointment>>()
+                .setData(appointments)
+                .setMessage("All Appointment Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Appointment>> findAppointmentById(Integer id) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new NoRecordFoundException("No Appointment Found"));
+
+        return new ResponseEntity<>(new ResponseStructure<Appointment>()
+                .setData(appointment)
+                .setMessage("Appointment Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<Appointment>>> findAppointmentByDate(LocalDate date) {
+
+        List<Appointment> appointments = appointmentRepository.findAll();
+
+        if (appointments.isEmpty()) {
+            throw new NoRecordFoundException("No Appointment Found");
+        }
+
+        List<Appointment> appointmentList = new ArrayList<>();
+
+        for (Appointment appointment : appointments) {
+            if (appointment.getLocalDateTime().toLocalDate().equals(date)) {
+                appointmentList.add(appointment);
+            }
+        }
+
+        if (appointmentList.isEmpty()) {
+            throw new NoRecordFoundException("No Appointment Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<Appointment>>()
+                .setData(appointmentList)
+                .setMessage("All Appointment Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<Appointment>>> findAppointmentByDoctorId(Integer id) {
+
+        List<Appointment> appointments = appointmentRepository.findByDoctor_Id(id);
+
+        if (appointments.isEmpty()) {
+            throw new NoRecordFoundException("No Appointment Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<Appointment>>()
+                .setData(appointments)
+                .setMessage("All Appointment Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<Appointment>>> findAppointmentByPatientId(Integer id) {
+
+        List<Appointment> appointments = appointmentRepository.findByPatient_Id(id);
+
+        if (appointments.isEmpty()) {
+            throw new NoRecordFoundException("No Appointment Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<Appointment>>()
+                .setData(appointments)
+                .setMessage("All Appointment Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Appointment>> cancelAppointment(Integer id) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new NoRecordFoundException("No Appointment Found"));
+
+        appointment.setStatus(Status.CANCELLED);
+
+        return new ResponseEntity<>(new ResponseStructure<Appointment>()
+                .setData(appointmentRepository.save(appointment))
+                .setMessage("Appointment CANCELLED")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Appointment>> updateStatus(Integer id, Status status) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new NoRecordFoundException("No Appointment Found"));
+
+        if (appointment.getStatus().equals(status)) {
+            throw new BadRequestException("Same Status Cannot be Updated");
+        }
+
+        appointment.setStatus(status);
+
+        return new ResponseEntity<>(new ResponseStructure<Appointment>()
+                .setData(appointmentRepository.save(appointment))
+                .setMessage("Appointment Status Changed")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<Appointment>>> findAppointmentByStatus(Status status) {
+
+        List<Appointment> appointments = appointmentRepository.findByStatus(status);
+
+        if (appointments.isEmpty()) {
+            throw new NoRecordFoundException("No Appointment Found");
         }
 
         return new ResponseEntity<>(new ResponseStructure<List<Appointment>>()
