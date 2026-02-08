@@ -35,15 +35,15 @@ public class DoctorService {
         }
 
         if (doctor.getName() == null) {
-            throw new IncompleteObjectException("Name Must Be Provided");
+            throw new BadRequestException("Name Must Be Provided");
         }
 
         if (doctor.getDepartment() == null) {
-            throw new IncompleteObjectException("Department Id Must Be Provided");
+            throw new BadRequestException("Department Id Must Be Provided");
         }
 
         if (doctor.getDepartment().getId() == null) {
-            throw new IncompleteObjectException("Department Id Must Be Provided");
+            throw new BadRequestException("Department Id Must Be Provided");
         }
 
         departmentRepository.findById(doctor.getDepartment().getId())
@@ -51,15 +51,15 @@ public class DoctorService {
 
 
         if (doctor.getSpecialization() == null) {
-            throw new IncompleteObjectException("Specialization Must Be Provided");
+            throw new BadRequestException("Specialization Must Be Provided");
         }
 
         if (doctor.getAvailableDays() == null) {
-            throw new IncompleteObjectException("AvailableDays Must Be Provided");
+            throw new BadRequestException("AvailableDays Must Be Provided");
         }
 
         if (doctor.getAvailableDays().isEmpty()) {
-            throw new IncompleteObjectException("At least One Available Day Should Be Provided");
+            throw new BadRequestException("At least One Available Day Should Be Provided");
         }
 
         return new ResponseEntity<>(new ResponseStructure<Doctor>()
@@ -90,7 +90,7 @@ public class DoctorService {
     public ResponseEntity<ResponseStructure<List<Doctor>>> findDoctorBySpecialization(String specialization) {
 
         if (specialization == null) {
-            throw new IncompleteObjectException("Please Provide Specialization");
+            throw new BadRequestException("Please Provide Specialization");
         }
 
         List<Doctor> doctors = doctorRepository.findBySpecialization(specialization);
@@ -129,11 +129,11 @@ public class DoctorService {
     public ResponseEntity<ResponseStructure<Set<Doctor>>> findDoctorByAvailableDays(Set<Days> days) {
 
         if (days == null) {
-            throw new IncompleteObjectException("Please Provide At Least One Day");
+            throw new BadRequestException("Please Provide At Least One Day");
         }
 
         if (days.isEmpty()) {
-            throw new IncompleteObjectException("Please Provide At Least One Day");
+            throw new BadRequestException("Please Provide At Least One Day");
         }
 
         List<Doctor> doctors = doctorRepository.findAll();
@@ -164,7 +164,7 @@ public class DoctorService {
     public ResponseEntity<ResponseStructure<Doctor>> findDoctorById(Integer id) {
 
         if (id == null) {
-            throw new IncompleteObjectException("Please Pass Id");
+            throw new BadRequestException("Please Pass Id");
         }
 
         Doctor doctor = doctorRepository.findById(id)
