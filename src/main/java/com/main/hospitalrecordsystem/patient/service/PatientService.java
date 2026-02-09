@@ -1,9 +1,14 @@
 package com.main.hospitalrecordsystem.patient.service;
 
+import com.main.hospitalrecordsystem.appointment.entity.Appointment;
+import com.main.hospitalrecordsystem.appointment.repository.AppointmentRepository;
 import com.main.hospitalrecordsystem.dto.ResponseStructure;
 import com.main.hospitalrecordsystem.exception.*;
+import com.main.hospitalrecordsystem.medicalrecord.entity.MedicalRecord;
+import com.main.hospitalrecordsystem.medicalrecord.repository.MedicalRecordRepository;
 import com.main.hospitalrecordsystem.patient.entity.Patient;
 import com.main.hospitalrecordsystem.patient.repository.PatientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,9 +19,14 @@ import java.util.List;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final MedicalRecordRepository medicalRecordRepository;
 
-    public PatientService(PatientRepository patientRepository) {
+    @Autowired
+    public PatientService(AppointmentRepository appointmentRepository, PatientRepository patientRepository, MedicalRecordRepository medicalRecordRepository) {
+        this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
+        this.medicalRecordRepository = medicalRecordRepository;
     }
 
     public ResponseEntity<ResponseStructure<Patient>> savePatient(Patient patient) {
@@ -209,6 +219,39 @@ public class PatientService {
         return new ResponseEntity<>(new ResponseStructure<String>()
                 .setData("Deleted")
                 .setMessage("Patient Is Deleted")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Patient>> findByAppointmentId(Integer id) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Appointment Id"));
+
+        Patient patient = patientRepository.findById(appointment.getPatient().getId())
+                .orElseThrow(() -> new NoRecordFoundException("No Record Found"));
+
+        return new ResponseEntity<>(new ResponseStructure<Patient>()
+                .setData(patient)
+                .setMessage("Patient Is Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+
+    }
+
+    public ResponseEntity<ResponseStructure<Patient>> findByRecordId(Integer id) {
+
+        MedicalRecord record = medicalRecordRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid MedicalRecord Id"));
+
+        Patient patient = patientRepository.findById(record.getPatient().getId())
+                .orElseThrow(() -> new NoRecordFoundException("No Record Found"));
+
+        return new ResponseEntity<>(new ResponseStructure<Patient>()
+                .setData(patient)
+                .setMessage("Patient Is Retrieved")
                 .setStatus(HttpStatus.OK.value()),
                 HttpStatus.OK
         );

@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -92,6 +93,10 @@ public class MedicalRecordService {
             throw new BadRequestException("Dont Pass Doctor Info");
         }
 
+        if (medicalRecord.getPrescription() != null) {
+            throw new BadRequestException("Prescription Cannot be Saved Before medical Record");
+        }
+
         Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId())
                         .orElseThrow(() -> new NoRecordFoundException("Doctor Info Not Found"));
 
@@ -103,6 +108,109 @@ public class MedicalRecordService {
                 .setMessage("Medical Record Saved")
                 .setStatus(HttpStatus.CREATED.value()),
                 HttpStatus.CREATED
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<MedicalRecord>>> findAllMedicalRecord() {
+
+        List<MedicalRecord> medicalRecords = medicalRecordRepository.findAll();
+
+        if (medicalRecords.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<MedicalRecord>>()
+                .setData(medicalRecords)
+                .setMessage("All Medical Record")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<MedicalRecord>> findById(Integer id) {
+
+        MedicalRecord medicalRecord = medicalRecordRepository.findById(id)
+                .orElseThrow(() -> new NoRecordFoundException("Id Is Invalid"));
+
+        return new ResponseEntity<>(new ResponseStructure<MedicalRecord>()
+                .setData(medicalRecord)
+                .setMessage("Medical Record Data Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<MedicalRecord>>> findByPatientId(Integer id) {
+
+        patientRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Patient Id"));
+
+        List<MedicalRecord> medicalRecords = medicalRecordRepository.findByPatient_Id(id);
+
+        if (medicalRecords.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<MedicalRecord>>()
+                .setData(medicalRecords)
+                .setMessage("All Medical Record For Patient Id " + id)
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<MedicalRecord>>> findByDoctorId(Integer id) {
+
+        doctorRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Doctor Id"));
+
+        List<MedicalRecord> medicalRecords = medicalRecordRepository.findByDoctor_Id(id);
+
+        if (medicalRecords.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<MedicalRecord>>()
+                .setData(medicalRecords)
+                .setMessage("All Medical Record For Doctor Id " + id)
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<MedicalRecord>> findByAppointmentId(Integer id) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Appointment id"));
+
+        if (appointment.getStatus() != Status.COMPLETED) {
+            throw new BadRequestException("Appointment Is Not Yet Completed");
+        }
+
+        MedicalRecord medicalRecord = medicalRecordRepository.findByPatient_IdAndVisitDate(appointment.getPatient().getId(), appointment.getLocalDateTime().toLocalDate())
+                .orElseThrow(() -> new NoRecordFoundException("No Record Found"));
+
+        return new ResponseEntity<>(new ResponseStructure<MedicalRecord>()
+                .setData(medicalRecord)
+                .setMessage("Medical Record For Appointment Id " + id)
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<List<MedicalRecord>>> findByDate(LocalDate date) {
+
+        List<MedicalRecord> medicalRecords = medicalRecordRepository.findByVisitDate(date);
+
+        if (medicalRecords.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<List<MedicalRecord>>()
+                .setData(medicalRecords)
+                .setMessage("All Medical Record For Visit Date : " + date)
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
         );
     }
 }

@@ -1,5 +1,7 @@
 package com.main.hospitalrecordsystem.doctor.service;
 
+import com.main.hospitalrecordsystem.appointment.entity.Appointment;
+import com.main.hospitalrecordsystem.appointment.repository.AppointmentRepository;
 import com.main.hospitalrecordsystem.department.entity.Department;
 import com.main.hospitalrecordsystem.department.repository.DepartmentRepository;
 import com.main.hospitalrecordsystem.doctor.entity.Doctor;
@@ -7,25 +9,29 @@ import com.main.hospitalrecordsystem.doctor.repository.DoctorRepository;
 import com.main.hospitalrecordsystem.dto.ResponseStructure;
 import com.main.hospitalrecordsystem.enums.Days;
 import com.main.hospitalrecordsystem.exception.*;
+import com.main.hospitalrecordsystem.patient.entity.Patient;
+import com.main.hospitalrecordsystem.patient.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
+    private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
 
     @Autowired
-    public DoctorService(DepartmentRepository departmentRepository, DoctorRepository doctorRepository) {
-        this.departmentRepository = departmentRepository;
+    public DoctorService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, DepartmentRepository departmentRepository, PatientRepository patientRepository) {
+        this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
+        this.departmentRepository = departmentRepository;
+        this.patientRepository = patientRepository;
     }
 
     public ResponseEntity<ResponseStructure<Doctor>> saveDoctor(Doctor doctor) {
@@ -229,6 +235,56 @@ public class DoctorService {
         return new ResponseEntity<>(new ResponseStructure<String>()
                 .setData("Deleted doctor with id : " + id)
                 .setMessage("Deleted")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Set<Doctor>>> findByPatientId(Integer id) {
+
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Patient ID"));
+
+        List<Appointment> appointments = appointmentRepository.findByPatient_Id(patient.getId());
+
+        if (appointments.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        Set<Doctor> doctors = new HashSet<>();
+
+        for (Appointment appointment : appointments) {
+            if (appointment.getDoctor() != null && appointment.getDoctor().getId() != null) {
+                Optional<Doctor> doctor = doctorRepository.findById(appointment.getDoctor().getId());
+                if (doctor.isPresent()) {
+                    doctors.add(doctor.get());
+                }
+            }
+        }
+
+        if (doctors.isEmpty()) {
+            throw new NoRecordFoundException("No Record Found");
+        }
+
+        return new ResponseEntity<>(new ResponseStructure<Set<Doctor>>()
+                .setData(doctors)
+                .setMessage("Doctor Records Retrieved")
+                .setStatus(HttpStatus.OK.value()),
+                HttpStatus.OK
+        );
+    }
+
+    public ResponseEntity<ResponseStructure<Doctor>> findByAppointmentId(Integer id) {
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Invalid Appointment Id"));
+
+        Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId())
+                .orElseThrow(() -> new NoRecordFoundException("No Record found"));
+
+        return new ResponseEntity<>(new ResponseStructure<Doctor>()
+                .setData(doctor)
+                .setMessage("Doctor Retrieved Successfully")
                 .setStatus(HttpStatus.OK.value()),
                 HttpStatus.OK
         );

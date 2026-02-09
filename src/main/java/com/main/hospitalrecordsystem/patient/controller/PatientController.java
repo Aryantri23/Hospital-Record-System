@@ -52,5 +52,15 @@ public class PatientController {
     public ResponseEntity<ResponseStructure<String>> deletePatient(@PathVariable Integer id) {
         return patientService.deletePatient(id);
     }
+
+    @GetMapping("/appointment/{id}")
+    public ResponseEntity<ResponseStructure<Patient>> findByAppointmentId(@PathVariable Integer id) {
+        return patientService.findByAppointmentId(id);
+    }
+
+    @GetMapping("/record/{id}")
+    public ResponseEntity<ResponseStructure<Patient>> findByRecordId(@PathVariable Integer id) {
+        return patientService.findByRecordId(id);
+    }
 }
 
